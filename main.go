@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -50,6 +52,7 @@ type Model struct {
 	terminalHeight   int
 	help             help.Model
 	keys             keyMap
+	catimgOutput     string
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
@@ -61,6 +64,31 @@ func (k keyMap) FullHelp() [][]key.Binding {
 		{k.Up, k.Down, k.Left, k.Right, k.Quit, k.Back},
 	}
 }
+
+func runCatimg(imagePath string, height, padding int) (string, error) {
+    cmd := exec.Command("catimg", imagePath, "-H", fmt.Sprintf("%d", height))
+    var out bytes.Buffer
+    cmd.Stdout = &out
+    err := cmd.Run()
+    if err != nil {
+        return "", err
+    }
+
+    // Split the output into lines
+    lines := strings.Split(out.String(), "\n")
+
+    // Add padding to the left of each line
+    paddedLines := make([]string, len(lines))
+    for i, line := range lines {
+        paddedLines[i] = strings.Repeat(" ", padding) + line
+    }
+
+    // Join the padded lines back into a single string
+    paddedOutput := strings.Join(paddedLines, "\n")
+
+    return paddedOutput, nil
+}
+
 
 func main() {
 	sshFolderPath := os.Getenv("SSH_FOLDER_PATH")
@@ -104,7 +132,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	utils.Typewrite(s, "☼☼☼☼☼☼☼☼☼☼☼☼☼☼ ENERGY GATHERED ☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼", 20)
 	utils.Typewrite(s, "@@@@@@@@&&&&&& DECODING CONTENT $$!@&((*&*@!))", 50)
 	utils.Typewrite(s, "⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺ CONTENT DECODED ⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺", 20)
-	time.Sleep(1 * time.Second)
+	//time.Sleep(1 * time.Second)
 
 	pty, _, active := s.Pty()
 	if !active {
@@ -118,19 +146,30 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		return nil, nil
 	}
 
+	// Capture catimg output
+	catimgOutput, err := runCatimg("jodc_logo.jpeg", 12, 2)
+
+	if err != nil {
+		wish.Fatalln(s, "failed to run catimg: "+err.Error())
+		return nil, nil
+	}
+
 	m := Model{
 		fileNames:        positionMeta.FileNames,
 		fileDescriptions: positionMeta.FileDescriptions,
 		terminalHeight:   pty.Window.Height,
 		help:             help.New(),
 		keys:             keys,
+		catimgOutput:     catimgOutput, // Initialize this field
 	}
 	return m, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 }
 
+
 func (m Model) Init() tea.Cmd {
 	return nil
 }
+
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
@@ -224,7 +263,9 @@ func (m Model) FooterView() string {
 
 func (m Model) View() string {
 	if m.currentView == fileListView {
-		s := components.TextWithBackgroundView("#fcd34d", "ORGANIZE PURDUE HACKERS", true)
+		s := components.TextWithBackgroundView("#fcd34d", " __THE_BELOVED_JODC_GANG__ ", true)
+		// Add catimg output to the view
+		s += m.catimgOutput+"\n"
 		s += components.IntroDescriptionView(m.viewport.Width)
 		s += components.OpenPositionsGrid(m.viewport.Width, m.fileNames, m.fileDescriptions, m.cursor)
 		s += "\n"

@@ -1,12 +1,12 @@
--> Learn more about us
+-> How to contribute to us 🤝
 
-# About Us
-
-# ✨ Welcome
+# About Purdue Hackers
 
 The JODC is an initiative by the students of JIIT-128 to promote open source culture. The hub is all about contributing to and collaborating on projects, networking, learning together and guiding students. We conduct talks, workshops, activities, one-to-one sessions and dev-sprints to mentor students.
 
-We encourage them to volunteer for open source projects and organisations and participate in open source initiatives such as Google Summer of Code and Outreachy to become better developers and for the betterment of open source.
+Please read the `README.md` for more information if you haven't already.
+
+# Contribute
 
 # 🌎 Join the JODC community
 
@@ -32,5 +32,4 @@ We're a community of great people who are passionate about Open-Source. You can 
 ██ █▄▄▄█ █▀█▄█▄▄▀█ █▀▀▀▄▄█ ██
 ██▄▄▄▄▄▄▄█▄▄█▄████▄████▄██▄██
 █████████████████████████████```
-
 

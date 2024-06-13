@@ -53,6 +53,7 @@ type Model struct {
 	help             help.Model
 	keys             keyMap
 	catimgOutput     string
+	qrOutput         string
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
@@ -66,29 +67,52 @@ func (k keyMap) FullHelp() [][]key.Binding {
 }
 
 func runCatimg(imagePath string, height, padding int) (string, error) {
-    cmd := exec.Command("catimg", imagePath, "-H", fmt.Sprintf("%d", height))
-    var out bytes.Buffer
-    cmd.Stdout = &out
-    err := cmd.Run()
-    if err != nil {
-        return "", err
-    }
+	cmd := exec.Command("catimg", imagePath, "-H", fmt.Sprintf("%d", height))
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
 
-    // Split the output into lines
-    lines := strings.Split(out.String(), "\n")
+	// Split the output into lines
+	lines := strings.Split(out.String(), "\n")
 
-    // Add padding to the left of each line
-    paddedLines := make([]string, len(lines))
-    for i, line := range lines {
-        paddedLines[i] = strings.Repeat(" ", padding) + line
-    }
+	// Add padding to the left of each line
+	paddedLines := make([]string, len(lines))
+	for i, line := range lines {
+		paddedLines[i] = strings.Repeat(" ", padding) + line
+	}
 
-    // Join the padded lines back into a single string
-    paddedOutput := strings.Join(paddedLines, "\n")
+	// Join the padded lines back into a single string
+	paddedOutput := strings.Join(paddedLines, "\n")
 
-    return paddedOutput, nil
+	return paddedOutput, nil
 }
 
+func runqr(padding int) (string, error) {
+	cmd := exec.Command("qrencode", "-m", "2", "-t", "utf8", "https://discord.gg/WW2sttvbVG")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+
+	// Split the output into lines
+	lines := strings.Split(out.String(), "\n")
+
+	// Add padding to the left of each line
+	paddedLines := make([]string, len(lines))
+	for i, line := range lines {
+		paddedLines[i] = strings.Repeat(" ", padding) + line
+	}
+
+	// Join the padded lines back into a single string
+	paddedOutput := strings.Join(paddedLines, "\n")
+
+	return paddedOutput, nil
+}
 
 func main() {
 	sshFolderPath := os.Getenv("SSH_FOLDER_PATH")
@@ -128,12 +152,6 @@ func main() {
 }
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-	utils.Typewrite(s, "★☆✯✰❉✺✸✦☼☼☼✺✸✦ GATHERING ENERGY ☼☼☼✺✸✦★☆✯✰❉✺✸✦", 50)
-	utils.Typewrite(s, "☼☼☼☼☼☼☼☼☼☼☼☼☼☼ ENERGY GATHERED ☼☼☼☼☼☼☼☼☼☼☼☼☼☼☼", 20)
-	utils.Typewrite(s, "@@@@@@@@&&&&&& DECODING CONTENT $$!@&((*&*@!))", 50)
-	utils.Typewrite(s, "⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺ CONTENT DECODED ⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺⏺", 20)
-	//time.Sleep(1 * time.Second)
-
 	pty, _, active := s.Pty()
 	if !active {
 		wish.Fatalln(s, "no active terminal, skipping")
@@ -147,10 +165,16 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	}
 
 	// Capture catimg output
-	catimgOutput, err := runCatimg("jodc_logo.jpeg", 12, 2)
-
+	catimgOutput, err := runCatimg("jodc_logo.jpeg", 15, 2)
 	if err != nil {
 		wish.Fatalln(s, "failed to run catimg: "+err.Error())
+		return nil, nil
+	}
+
+	// Capture qrencode output
+	qrOutput, err := runqr(2)
+	if err != nil {
+		wish.Fatalln(s, "failed to run qrencode: "+err.Error())
 		return nil, nil
 	}
 
@@ -160,16 +184,15 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		terminalHeight:   pty.Window.Height,
 		help:             help.New(),
 		keys:             keys,
-		catimgOutput:     catimgOutput, // Initialize this field
+		catimgOutput:     catimgOutput,
+		qrOutput:         qrOutput,
 	}
 	return m, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 }
 
-
 func (m Model) Init() tea.Cmd {
 	return nil
 }
-
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
@@ -224,7 +247,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		footerHeight := lipgloss.Height(m.FooterView())
 		verticalMarginHeight := headerHeight + footerHeight
 
-		if !m.ready {
+		if (!m.ready) {
 			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
 			m.viewport.YPosition = headerHeight
 			m.viewport.HighPerformanceRendering = false
@@ -263,9 +286,9 @@ func (m Model) FooterView() string {
 
 func (m Model) View() string {
 	if m.currentView == fileListView {
-		s := components.TextWithBackgroundView("#fcd34d", " __THE_BELOVED_JODC_GANG__ ", true)
-		// Add catimg output to the view
-		s += m.catimgOutput+"\n"
+		s := components.TextWithBackgroundView("#fcd34d", " __THE_SUPREME_AND_POWERFUL_JODC_GANG__ ", true, false)
+		// Add catimg and qrencode outputs side-by-side
+		s += lipgloss.JoinHorizontal(lipgloss.Top, m.catimgOutput, m.qrOutput) + "\n"
 		s += components.IntroDescriptionView(m.viewport.Width)
 		s += components.OpenPositionsGrid(m.viewport.Width, m.fileNames, m.fileDescriptions, m.cursor)
 		s += "\n"
@@ -275,3 +298,4 @@ func (m Model) View() string {
 		return fmt.Sprintf("%s\n%s\n%s", m.HeaderView(), m.viewport.View(), m.FooterView())
 	}
 }
+

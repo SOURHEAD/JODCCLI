@@ -6,19 +6,19 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func TextWithBackgroundView(backgroundColor string, text string, outerPadding bool) string {
+func TextWithBackgroundView(backgroundColor string, text string, outerPadding bool, blink bool ) string {
 	outerContainerStyle := lipgloss.NewStyle()
 	if outerPadding {
 		outerContainerStyle = outerContainerStyle.Padding(1)
 	}
 	innerContainerStyle := lipgloss.NewStyle().
-		Padding(0, 1).
+		Padding(0, 0).
 		Background(lipgloss.
 			Color(backgroundColor))
 	textStyle := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("#000000")).
-		Blink(true)
+		Blink(blink)
 
 	return outerContainerStyle.Render(innerContainerStyle.Render(textStyle.Render(text))) + "\n"
 }
@@ -80,7 +80,7 @@ func OpenPositionsGrid(width int, fileNames []string, fileDescriptions []string,
 
 	readmeSelected := cursor == 0
 	styledReadme := PositionListItemView(maxWidth, fileNames[0], fileDescriptions[0], readmeSelected) + "\n\n\n"
-	openPositions := TextWithBackgroundView("#C48FDC", "OPEN POSITIONS", false)
+	openPositions := TextWithBackgroundView("#C48FDC", "  WORK WITH US!!", false, true)
 	startHere := styledReadme + openPositions
 	rows = append(rows, startHere)
 

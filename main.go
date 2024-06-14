@@ -53,7 +53,6 @@ type Model struct {
 	help             help.Model
 	keys             keyMap
 	catimgOutput     string
-	qrOutput         string
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
@@ -90,29 +89,6 @@ func runCatimg(imagePath string, height, padding int) (string, error) {
 	return paddedOutput, nil
 }
 
-func runqr(padding int) (string, error) {
-	cmd := exec.Command("qrencode", "-m", "2", "-t", "utf8", "https://discord.gg/WW2sttvbVG")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		return "", err
-	}
-
-	// Split the output into lines
-	lines := strings.Split(out.String(), "\n")
-
-	// Add padding to the left of each line
-	paddedLines := make([]string, len(lines))
-	for i, line := range lines {
-		paddedLines[i] = strings.Repeat(" ", padding) + line
-	}
-
-	// Join the padded lines back into a single string
-	paddedOutput := strings.Join(paddedLines, "\n")
-
-	return paddedOutput, nil
-}
 
 func main() {
 	sshFolderPath := os.Getenv("SSH_FOLDER_PATH")
@@ -171,13 +147,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		return nil, nil
 	}
 
-	// Capture qrencode output
-	qrOutput, err := runqr(2)
-	if err != nil {
-		wish.Fatalln(s, "failed to run qrencode: "+err.Error())
-		return nil, nil
-	}
-
+	
 	m := Model{
 		fileNames:        positionMeta.FileNames,
 		fileDescriptions: positionMeta.FileDescriptions,
@@ -185,7 +155,6 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		help:             help.New(),
 		keys:             keys,
 		catimgOutput:     catimgOutput,
-		qrOutput:         qrOutput,
 	}
 	return m, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 }
@@ -287,8 +256,7 @@ func (m Model) FooterView() string {
 func (m Model) View() string {
 	if m.currentView == fileListView {
 		s := components.TextWithBackgroundView("#fcd34d", " __THE_SUPREME_AND_POWERFUL_JODC_GANG__ ", true, false)
-		// Add catimg and qrencode outputs side-by-side
-		s += lipgloss.JoinHorizontal(lipgloss.Top, m.catimgOutput, m.qrOutput) + "\n"
+		s += lipgloss.JoinHorizontal(lipgloss.Top, m.catimgOutput) + "\n"
 		s += components.IntroDescriptionView(m.viewport.Width)
 		s += components.OpenPositionsGrid(m.viewport.Width, m.fileNames, m.fileDescriptions, m.cursor)
 		s += "\n"

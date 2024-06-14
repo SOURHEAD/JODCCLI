@@ -7,6 +7,8 @@
 **MUST CREATE SEPARATE LINK WITH RESPECT TO JODC DOMAIN WHICH ALSO NEED TO BE BOUGHT
 **
 
+CURRENTLY DEPLOYED AT (`ssh root@13.49.113.66 -p 23234`)
+
 
 install golang and run it locally-
 
@@ -14,9 +16,6 @@ install golang and run it locally-
 
 `/app/bin/organize /organize`
 
-do set your own username
-
 `ssh <your username>@localhost -p 23234`
 
-or use the dockerfile (needs more implementation right now)
-
+or use the dockerfile

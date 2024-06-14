@@ -66,28 +66,29 @@ func (k keyMap) FullHelp() [][]key.Binding {
 }
 
 func runCatimg(imagePath string, height, padding int) (string, error) {
-	cmd := exec.Command("catimg", imagePath, "-H", fmt.Sprintf("%d", height))
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		return "", err
-	}
+    cmd := exec.Command("cat", imagePath)
+    var out bytes.Buffer
+    cmd.Stdout = &out
+    err := cmd.Run()
+    if err != nil {
+        return "", err
+    }
 
-	// Split the output into lines
-	lines := strings.Split(out.String(), "\n")
+    // Split the output into lines
+    lines := strings.Split(out.String(), "\n")
 
-	// Add padding to the left of each line
-	paddedLines := make([]string, len(lines))
-	for i, line := range lines {
-		paddedLines[i] = strings.Repeat(" ", padding) + line
-	}
+    // Add padding to the left of each line
+    paddedLines := make([]string, len(lines))
+    for i, line := range lines {
+        paddedLines[i] = strings.Repeat(" ", padding) + line
+    }
 
-	// Join the padded lines back into a single string
-	paddedOutput := strings.Join(paddedLines, "\n")
+    // Join the padded lines back into a single string
+    paddedOutput := strings.Join(paddedLines, "\n")
 
-	return paddedOutput, nil
+    return paddedOutput, nil
 }
+
 
 
 func main() {
@@ -128,36 +129,40 @@ func main() {
 }
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-	pty, _, active := s.Pty()
-	if !active {
-		wish.Fatalln(s, "no active terminal, skipping")
-		return nil, nil
-	}
+    pty, _, active := s.Pty()
+    if !active {
+        wish.Fatalln(s, "no active terminal, skipping")
+        return nil, nil
+    }
 
-	positionMeta, err := utils.GetPositionMeta("directory")
-	if err != nil {
-		wish.Fatalln(s, "can't read directory: "+err.Error())
-		return nil, nil
-	}
+    positionMeta, err := utils.GetPositionMeta("directory")
+    if err != nil {
+        wish.Fatalln(s, "can't read directory: "+err.Error())
+        return nil, nil
+    }
 
-	// Capture catimg output
-	catimgOutput, err := runCatimg("jodc_logo.jpeg", 15, 2)
-	if err != nil {
-		wish.Fatalln(s, "failed to run catimg: "+err.Error())
-		return nil, nil
-	}
+    // Capture catimg output
+    catimgOutput, err := runCatimg("jodc_logo.txt", 15, 2)
+    if err != nil {
+        wish.Fatalln(s, "failed to run catimg: "+err.Error())
+        return nil, nil
+    }
 
-	
-	m := Model{
-		fileNames:        positionMeta.FileNames,
-		fileDescriptions: positionMeta.FileDescriptions,
-		terminalHeight:   pty.Window.Height,
-		help:             help.New(),
-		keys:             keys,
-		catimgOutput:     catimgOutput,
-	}
-	return m, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
+    // Continue with your model initialization
+    m := Model{
+        fileNames:        positionMeta.FileNames,
+        fileDescriptions: positionMeta.FileDescriptions,
+        terminalHeight:   pty.Window.Height,
+        help:             help.New(),
+        keys:             keys,
+        catimgOutput:     catimgOutput,
+    }
+
+    // Additional initialization code...
+
+    return m, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 }
+
 
 func (m Model) Init() tea.Cmd {
 	return nil

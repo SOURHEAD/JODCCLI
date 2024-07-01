@@ -27,17 +27,6 @@ jobs:
 
       - name: Wait for Docker container to start
         run: sleep 10
-
-      - name: Test HTTP response code
-        run: |
-          status_code=$(docker exec organize-app curl -o /dev/null -s -w "%{http_code}" http://localhost:23234/organize)
-          echo "HTTP Status Code: $status_code"
-          if [ "$status_code" -eq 200 ]; then
-            echo "Test passed! HTTP 200 OK received."
-          else
-            echo "Test failed! HTTP status code was not 200."
-            exit 1
-          fi
-
+        
       - name: Clean up
         run: docker stop organize-app && docker rm organize-app

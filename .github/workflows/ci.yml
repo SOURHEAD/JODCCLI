@@ -29,6 +29,19 @@ jobs:
     - name: Build application
       run: go build -o bin/organize
 
+    - name: Download and set up ngrok
+      run: |
+        wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+        unzip ngrok-stable-linux-amd64.zip
+        mv ngrok /usr/local/bin
+        ngrok authtoken ${{ secrets.NGROK_TOKEN }}
+
+    - name: Start ngrok tunnel
+      run: ngrok tcp 23234 &
+
     - name: Run application
       run: |
         bin/organize /organize
+
+    - name: Display ngrok URL
+      run: curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url'

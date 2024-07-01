@@ -27,9 +27,8 @@ jobs:
         sudo apt-get install -y wget gnupg
 
     - name: Build application
-      run: go build -o /app/bin/organize
+      run: go build -o bin/organize
 
     - name: Run application
       run: |
-        cp organize /app/bin/
-        /app/bin/organize /organize
+        bin/organize /organize

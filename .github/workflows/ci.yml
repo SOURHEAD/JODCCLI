@@ -1,4 +1,4 @@
-name: Docker Build and Run
+name: Docker Build and Test
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build-and-run:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,13 +23,21 @@ jobs:
         run: docker build -t my-organize-app .
 
       - name: Run Docker container
-        run: docker run -d -p 80:80 --name organize-app my-organize-app
+        run: docker run -d -p 23234:23234 --name organize-app my-organize-app
 
       - name: Wait for Docker container to start
         run: sleep 10
 
       - name: Test HTTP response code
-        run: docker exec organize-app curl -o /dev/null -s -w "%{http_code}" http://localhost/organize | grep "200"
+        run: |
+          status_code=$(docker exec organize-app curl -o /dev/null -s -w "%{http_code}" http://localhost:23234/organize)
+          echo "HTTP Status Code: $status_code"
+          if [ "$status_code" -eq 200 ]; then
+            echo "Test passed! HTTP 200 OK received."
+          else
+            echo "Test failed! HTTP status code was not 200."
+            exit 1
+          fi
 
       - name: Clean up
         run: docker stop organize-app && docker rm organize-app

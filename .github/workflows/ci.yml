@@ -31,6 +31,5 @@ jobs:
 
     - name: Run application
       run: |
-        mkdir -p /app/bin
         cp organize /app/bin/
         /app/bin/organize /organize

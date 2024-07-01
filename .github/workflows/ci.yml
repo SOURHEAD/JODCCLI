@@ -1,4 +1,4 @@
-name: CI
+name: Docker Build and Run
 
 on:
   push:
@@ -9,24 +9,27 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-run:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
       - name: Build Docker image
         run: docker build -t my-organize-app .
 
       - name: Run Docker container
-        run: docker run -d -p 2222:22 --name organize-app my-organize-app
+        run: docker run -d -p 80:80 --name organize-app my-organize-app
 
       - name: Wait for Docker container to start
         run: sleep 10
 
       - name: Test HTTP response code
-        run: docker exec organize-app curl -o /dev/null -s -w "%{http_code}" http://localhost:80/organize | grep "200"
+        run: docker exec organize-app curl -o /dev/null -s -w "%{http_code}" http://localhost/organize | grep "200"
 
       - name: Clean up
         run: docker stop organize-app && docker rm organize-app

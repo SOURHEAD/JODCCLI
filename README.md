@@ -1,20 +1,16 @@
 
-# organize
+# JODC
 
+> soon to be deployed at jodc.in
+(might be deployed at ssh root@4.213.118.229 -p 23234)
 
->`$ ssh organize.purduehackers.com`
-
-**MUST CREATE SEPARATE LINK WITH RESPECT TO JODC DOMAIN WHICH ALSO NEED TO BE BOUGHT
-**
-
-CURRENTLY DEPLOYED AT (`ssh root@13.49.113.66 -p 23234`)
 
 
 install golang and run it locally-
 
-`sudo go build -o /app/bin/organize`
+`go build`
 
-`/app/bin/organize /organize`
+`./organize`
 
 `ssh <your username>@localhost -p 23234`
 

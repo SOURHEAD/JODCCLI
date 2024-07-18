@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -52,7 +50,6 @@ type Model struct {
 	terminalHeight   int
 	help             help.Model
 	keys             keyMap
-	catimgOutput     string
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
@@ -64,32 +61,6 @@ func (k keyMap) FullHelp() [][]key.Binding {
 		{k.Up, k.Down, k.Left, k.Right, k.Quit, k.Back},
 	}
 }
-
-func runCatimg(imagePath string, height, padding int) (string, error) {
-    cmd := exec.Command("cat", imagePath)
-    var out bytes.Buffer
-    cmd.Stdout = &out
-    err := cmd.Run()
-    if err != nil {
-        return "", err
-    }
-
-    // Split the output into lines
-    lines := strings.Split(out.String(), "\n")
-
-    // Add padding to the left of each line
-    paddedLines := make([]string, len(lines))
-    for i, line := range lines {
-        paddedLines[i] = strings.Repeat(" ", padding) + line
-    }
-
-    // Join the padded lines back into a single string
-    paddedOutput := strings.Join(paddedLines, "\n")
-
-    return paddedOutput, nil
-}
-
-
 
 func main() {
 	sshFolderPath := os.Getenv("SSH_FOLDER_PATH")
@@ -129,40 +100,33 @@ func main() {
 }
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-    pty, _, active := s.Pty()
-    if !active {
-        wish.Fatalln(s, "no active terminal, skipping")
-        return nil, nil
-    }
+	utils.Typewrite(s, "@@@@@@@@&&&&&& DECODING CONTENT $$!@&((*&*@!))", 12)
+	utils.Typewrite(s, "", 2)
+	utils.Typewrite(s, "", 1)
+    
+    
+	
+	pty, _, active := s.Pty()
+	if !active {
+		wish.Fatalln(s, "no active terminal, skipping")
+		return nil, nil
+	}
 
-    positionMeta, err := utils.GetPositionMeta("directory")
-    if err != nil {
-        wish.Fatalln(s, "can't read directory: "+err.Error())
-        return nil, nil
-    }
+	positionMeta, err := utils.GetPositionMeta("directory")
+	if err != nil {
+		wish.Fatalln(s, "can't read directory: "+err.Error())
+		return nil, nil
+	}
 
-    // Capture catimg output
-    catimgOutput, err := runCatimg("jodc_logo.txt", 15, 2)
-    if err != nil {
-        wish.Fatalln(s, "failed to run catimg: "+err.Error())
-        return nil, nil
-    }
-
-    // Continue with your model initialization
-    m := Model{
-        fileNames:        positionMeta.FileNames,
-        fileDescriptions: positionMeta.FileDescriptions,
-        terminalHeight:   pty.Window.Height,
-        help:             help.New(),
-        keys:             keys,
-        catimgOutput:     catimgOutput,
-    }
-
-    // Additional initialization code...
-
-    return m, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
+	m := Model{
+		fileNames:        positionMeta.FileNames,
+		fileDescriptions: positionMeta.FileDescriptions,
+		terminalHeight:   pty.Window.Height,
+		help:             help.New(),
+		keys:             keys,
+	}
+	return m, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 }
-
 
 func (m Model) Init() tea.Cmd {
 	return nil
@@ -221,7 +185,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		footerHeight := lipgloss.Height(m.FooterView())
 		verticalMarginHeight := headerHeight + footerHeight
 
-		if (!m.ready) {
+		if !m.ready {
 			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
 			m.viewport.YPosition = headerHeight
 			m.viewport.HighPerformanceRendering = false
@@ -241,7 +205,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) HeaderView() string {
 	title := components.HeaderStyle.Render(m.selectedFileName)
 	line := strings.Repeat(lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#fcd34d")).
+		Foreground(lipgloss.Color("#c21328")).
 		Render("─"), utils.Max(0, m.viewport.Width-lipgloss.Width(title)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
 }
@@ -251,7 +215,7 @@ func (m Model) FooterView() string {
 
 	info := components.FooterStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	line := strings.Repeat(lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#fcd34d")).
+		Foreground(lipgloss.Color("#c21328")).
 		Render("─"), utils.Max(0, m.viewport.Width-lipgloss.Width(info)))
 	footerInfo := lipgloss.JoinHorizontal(lipgloss.Center, line, info)
 
@@ -260,8 +224,7 @@ func (m Model) FooterView() string {
 
 func (m Model) View() string {
 	if m.currentView == fileListView {
-		s := components.TextWithBackgroundView("#fcd34d", " __THE_SUPREME_AND_POWERFUL_JODC_GANG__ ", true, false)
-		s += lipgloss.JoinHorizontal(lipgloss.Top, m.catimgOutput) + "\n"
+		s := components.TextWithBackgroundView("#bf13c2", "JIIT OPEN SOURCE DEVELOPERS CLUB", true,false)
 		s += components.IntroDescriptionView(m.viewport.Width)
 		s += components.OpenPositionsGrid(m.viewport.Width, m.fileNames, m.fileDescriptions, m.cursor)
 		s += "\n"
@@ -271,4 +234,3 @@ func (m Model) View() string {
 		return fmt.Sprintf("%s\n%s\n%s", m.HeaderView(), m.viewport.View(), m.FooterView())
 	}
 }
-

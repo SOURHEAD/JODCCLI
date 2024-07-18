@@ -36,11 +36,11 @@ func PositionListItemView(maxWidth int, title string, description string, select
 		Bold(true)
 	containerStyle := lipgloss.NewStyle().
 		BorderStyle(lipgloss.ThickBorder()).
-		BorderForeground(lipgloss.Color("63")).
+		BorderForeground(lipgloss.Color("#e9a2eb")).
 		Width(int(math.Round(float64(maxWidth) * 0.6)))
 	if selected {
 		containerStyle = containerStyle.
-			BorderForeground(lipgloss.Color("#fcd34d"))
+			BorderForeground(lipgloss.Color("#abf748"))
 	}
 	innerContainerStyle := lipgloss.NewStyle().
 		PaddingLeft(2).
@@ -62,7 +62,7 @@ var (
 		b.Right = "├"
 		return lipgloss.NewStyle().
 			BorderStyle(b).
-			BorderForeground(lipgloss.Color("#fcd34d")).
+			BorderForeground(lipgloss.Color("#c21328")).
 			Padding(0, 1).
 			Bold(true)
 	}()
@@ -80,7 +80,7 @@ func OpenPositionsGrid(width int, fileNames []string, fileDescriptions []string,
 
 	readmeSelected := cursor == 0
 	styledReadme := PositionListItemView(maxWidth, fileNames[0], fileDescriptions[0], readmeSelected) + "\n\n\n"
-	openPositions := TextWithBackgroundView("#C48FDC", "  WORK WITH US!!", false, true)
+	openPositions := TextWithBackgroundView("#bf13c2", "  WORK WITH US!!", false, true)
 	startHere := styledReadme + openPositions
 	rows = append(rows, startHere)
 
